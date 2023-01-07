@@ -2,7 +2,7 @@
 
 namespace discord_template
 {
-    public class Ids
+    internal class Ids
     {
         public readonly string m_Token;
         public readonly string[] m_GuildIds;
