@@ -1,3 +1,4 @@
-# discord_template
+# docker_on_discord
 
-discordbotのテンプレート
+discord.netで作るdockerの簡易操作用bot
+愛情込めて作ってます
