@@ -14,10 +14,15 @@ namespace discord_template
 
         public static void Main(string[] args)
         {
+            CommandBuilder commandbuilder = new CommandBuilder("docker.json");
+            commandbuilder.CommandPush();
+
             Ids ids = new Ids(reader);
 
             CommandSender commandSender = new CommandSender(Directory.GetCurrentDirectory() + "/commands", ids);
             commandSender.RequestSender();
+
+            Thread.Sleep(1000);
 
             _ = new Program().MainAsync();
 
