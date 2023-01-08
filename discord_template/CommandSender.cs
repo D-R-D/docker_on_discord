@@ -7,7 +7,7 @@ namespace discord_template
         public readonly string[] m_CommandList;
         public readonly Ids m_Ids;
 
-        public CommandSender(string? directoryPath, Ids ids)
+        public CommandSender(string directoryPath, Ids ids)
         {
             if (directoryPath.IsNullOrEmpty()) { throw new Exception($"{nameof(directoryPath)}が不正です。\nnullもしくは空白です。"); }
             //ファイル一覧を取得
