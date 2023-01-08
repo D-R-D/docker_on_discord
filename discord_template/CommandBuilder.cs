@@ -1,8 +1,5 @@
-﻿using Discord.Interactions;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System.Collections;
-using System.Configuration;
-using System.Text;
 using System.Text.Json;
 using System.Text.Unicode;
 
@@ -91,16 +88,16 @@ namespace discord_template
 
 
             //読みだしたjson全体を(Dictionary)commandにデシリアライズする
-            Dictionary<string, object> command = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonContent);
+            Dictionary<string, object> command = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonContent)!;
 
             //(Dictionary)commandの配列要素optionをjsonにシリアライズしてから、再度(ArrayList)option_arrayとしてデシリアライズする
-            ArrayList option_array = JsonConvert.DeserializeObject<ArrayList>(JsonConvert.SerializeObject(command["options"]));
+            ArrayList option_array = JsonConvert.DeserializeObject<ArrayList>(JsonConvert.SerializeObject(command!["options"]))!;
 
             //(ArrayList)option_arrayの1番目の要素をjsonにシリアライズしてから、再度(Dictionary)container_commandとしてデシリアライズする
-            Dictionary<string, object> container_command = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(option_array[1]));
+            Dictionary<string, object> container_command = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(option_array[1]))!;
 
             //(Dictionaty)container_commandのchoices要素として(List)additemを代入する
-            container_command["choices"] = containers;
+            container_command!["choices"] = containers;
 
             //(ArrayList)option_arrayの1番目の要素として(Dictionary)container_commandを代入する
             option_array[1] = container_command;
