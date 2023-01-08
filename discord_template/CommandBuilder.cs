@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using docker_on_discord;
+using Newtonsoft.Json;
 using System.Collections;
 using System.Text.Json;
 using System.Text.Unicode;
@@ -49,20 +50,25 @@ namespace discord_template
             }
         }
 
+        //https://www.fenet.jp/dotnet/column/language/5722/
         private List<Dictionary<string, string>> Get_Containers()
         {
-            //docker ps -a --format "{{.Names}};
+            string ContainerNames = ConsoleCommandRunner.GetCommandResult("\"docker ps -a --format {{.Names}}\"");
+            string[] ContainerList = ContainerNames.Split('\n');
+            Console.WriteLine(ContainerNames);
 
             List<Dictionary<string, string>> additem = new List<Dictionary<string, string>>();
-
-            for (int i = 0; i < 10; i++)
+            foreach (string name in ContainerList)
             {
-                Dictionary<string, string> tempitem = new Dictionary<string, string>()
-            {
-                { "name",i.ToString() },
-                { "value", i.ToString() }
-            };
-                additem.Add(tempitem);
+                if (name != "")
+                {
+                    Dictionary<string, string> tempitem = new Dictionary<string, string>()
+                    {
+                        { "name", name.ToString() },
+                        { "value", name.ToString() }
+                    };
+                    additem.Add(tempitem);
+                }
             }
 
             return additem;
