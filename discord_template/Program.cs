@@ -1,12 +1,14 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using docker_on_discord;
 using System.Configuration;
 
 namespace discord_template
 {
     class Program
     {
+        static Ids? ids = null;
         public static AppSettingsReader reader = new AppSettingsReader();
 
         private DiscordSocketClient? _client;
@@ -17,7 +19,7 @@ namespace discord_template
             CommandBuilder commandbuilder = new CommandBuilder("docker.json");
             commandbuilder.CommandPush();
 
-            Ids ids = new Ids(reader);
+            ids = new Ids(reader);
 
             CommandSender commandSender = new CommandSender(Directory.GetCurrentDirectory() + "/commands", ids);
             commandSender.RequestSender();
@@ -63,8 +65,34 @@ namespace discord_template
         }
         private async Task SlashCommandHandler(SocketSlashCommand command)
         {
-            //コマンド受信時の処理
-            await Task.CompletedTask;
+            await command.RespondAsync("PROCESSING...");
+
+            _ = Task.Run(async () =>
+            {
+                string result = string.Empty;
+                if (command.CommandName == "docker")
+                {
+                    result = Command_Docker.DockerCtrl(command);
+                    await command.ModifyOriginalResponseAsync(m => { m.Content = result; });
+                    return;
+                }
+
+                if (command.CommandName == "containers")
+                {
+                    result = Command_Containers.ListUp(command);
+                    await command.ModifyOriginalResponseAsync(m => { m.Content = result; });
+                    return;
+                }
+
+                if (command.CommandName == "reload")
+                {
+                    result = Command_Reload.ContainersReload(command, reader);
+                    await command.ModifyOriginalResponseAsync(m => { m.Content = result; });
+                    return;
+                }
+
+                await command.ModifyOriginalResponseAsync(m => { m.Content = command.CommandName + " is not fonund."; });
+            });
         }
     }
 }
