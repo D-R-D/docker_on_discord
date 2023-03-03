@@ -29,10 +29,10 @@ namespace discord_template
             string[] json_list = Directory.GetFiles(Directory.GetCurrentDirectory() + @"/commands/", targetfile);
             if(json_list == null || json_list.Length <= 0) { throw new Exception("No jsonfile Found."); }
 
-            m_JsonList = json_list;
+            m_JsonList = json_list; //[jsonpath, jsonpath, ...]
         }
 
-        //m_JsonList内のJson構造中のtarget_nameと一致する要素を現在のコンテナ名と置き換える
+        //m_JsonList内のJson構造中の、target_nameと一致する要素を現在のコンテナ名と置き換える
         public void CommandPush() 
         {
             if(m_JsonList == null || m_JsonList.Length <= 0) { throw new Exception($"{nameof(m_JsonList)} is null or Empty."); }
