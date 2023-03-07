@@ -3,6 +3,8 @@ using Discord.Commands;
 using Discord.WebSocket;
 using docker_on_discord;
 using System.Configuration;
+using static System.Net.Mime.MediaTypeNames;
+using System.IO;
 
 namespace discord_template
 {
@@ -51,10 +53,12 @@ namespace discord_template
 
         private Task Log(LogMessage message)
         {
-            if (message.Exception is CommandException cmdException) {
+            if (message.Exception is CommandException cmdException)
+            {
                 Console.WriteLine($"[Command/{message.Severity}] {cmdException.Command.Aliases.First()}" + $" failed to execute in {cmdException.Context.Channel}.");
                 Console.WriteLine(cmdException);
-            } else { Console.WriteLine($"[General/{message.Severity}] {message}"); }
+            } 
+            else { Console.WriteLine($"[General/{message.Severity}] {message}"); }
 
             return Task.CompletedTask;
         }
@@ -67,32 +71,59 @@ namespace discord_template
         {
             await command.RespondAsync("PROCESSING...");
 
-            _ = Task.Run(async () =>
+            string result = string.Empty;
+            if (command.CommandName == "docker")
             {
-                string result = string.Empty;
-                if (command.CommandName == "docker")
+                result = Command_Docker.DockerCtrl(command);
+                await command.ModifyOriginalResponseAsync(m => { m.Content = result; });
+                return;
+            }
+
+            if (command.CommandName == "containers")
+            {
+                result = Command_Containers.ListUp(command);
+
+                if (result.Length > 2000)
                 {
-                    result = Command_Docker.DockerCtrl(command);
-                    await command.ModifyOriginalResponseAsync(m => { m.Content = result; });
+                    Optional<IEnumerable<FileAttachment>> optional = new();
+                    using (Stream stream = new MemoryStream()) 
+                    {
+                        StreamWriter sw = new StreamWriter(stream);
+                        sw.Write(result);
+                        stream.Position = 0;
+
+                        //ファイル添付に必用な処理
+                        FileAttachment fa = new FileAttachment(stream, DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".txt");
+                        List<FileAttachment> flis = new List<FileAttachment>();
+                        flis.Add(fa);
+                        optional = new Optional<IEnumerable<FileAttachment>>(flis);
+
+                        result = "文字数上限に達しました。sshから直接確認してください。";
+
+                        await command.ModifyOriginalResponseAsync(m =>
+                        {
+                            m.Content = result;
+                            m.Attachments = optional;
+                        });
+                    }
                     return;
                 }
 
-                if (command.CommandName == "containers")
+                await command.ModifyOriginalResponseAsync(m =>
                 {
-                    result = Command_Containers.ListUp(command);
-                    await command.ModifyOriginalResponseAsync(m => { m.Content = result; });
-                    return;
-                }
+                    m.Content = $"```\n{result}\n```";
+                });
+                return;
+            }
 
-                if (command.CommandName == "reload")
-                {
-                    result = Command_Reload.ContainersReload(command, reader);
-                    await command.ModifyOriginalResponseAsync(m => { m.Content = result; });
-                    return;
-                }
+            if (command.CommandName == "reload")
+            {
+                result = Command_Reload.ContainersReload(command, reader);
+                await command.ModifyOriginalResponseAsync(m => { m.Content = result; });
+                return;
+            }
 
-                await command.ModifyOriginalResponseAsync(m => { m.Content = command.CommandName + " is not fonund."; });
-            });
+            await command.ModifyOriginalResponseAsync(m => { m.Content = command.CommandName + " is not fonund."; });
         }
     }
 }

@@ -12,7 +12,7 @@ namespace docker_on_discord
     {
         public static string GetCommandResult(string command)
         {
-            Console.WriteLine(command);
+            Console.WriteLine($"/bin/bash command.sh {command}");
             if (Tools.IsNullOrEmpty(command)) { throw new ArgumentNullException(nameof(command)); }
 
             string result = "";

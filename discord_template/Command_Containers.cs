@@ -13,15 +13,16 @@ namespace docker_on_discord
         public static string ListUp(SocketSlashCommand command) 
         {
             string result = "warn: result write";
+            Console.WriteLine($"container listup");
             try
             {
                 result = ConsoleCommandRunner.GetCommandResult("\"docker ps -a\"");
-                result = "```\n" + result + "\n```";
             }
             catch (Exception ex)
             {
                 result = ex.Message;
             }
+
             return result;
         }
     }

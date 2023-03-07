@@ -10,14 +10,20 @@ namespace discord_template
     {
         public readonly string[] m_JsonList;
 
-        //Jsonを触るときに使うかもしれない設定
+        /// <summary>
+        /// Jsonを触るときに使うかもしれない設定
+        /// </summary>
         static JsonSerializerOptions jopt = new JsonSerializerOptions()
         {
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(UnicodeRanges.All),
             WriteIndented = true
         };
 
-        //m_JsonListを初期化
+        /// <summary>
+        /// m_JsonListを初期化
+        /// </summary>
+        /// <param name="targetfile"></param>
+        /// <exception cref="Exception"></exception>
         public CommandBuilder(string targetfile)
         {
             if (!Directory.Exists(Directory.GetCurrentDirectory() + @"/commands/")) 
@@ -32,7 +38,10 @@ namespace discord_template
             m_JsonList = json_list; //[jsonpath, jsonpath, ...]
         }
 
-        //m_JsonList内のJson構造中の、target_nameと一致する要素を現在のコンテナ名と置き換える
+        /// <summary>
+        /// m_JsonList内のJson構造中の、target_nameと一致する要素を現在のコンテナ名と置き換える
+        /// </summary>
+        /// <exception cref="Exception"></exception>
         public void CommandPush() 
         {
             if(m_JsonList == null || m_JsonList.Length <= 0) { throw new Exception($"{nameof(m_JsonList)} is null or Empty."); }
@@ -50,7 +59,10 @@ namespace discord_template
             }
         }
 
-        //https://www.fenet.jp/dotnet/column/language/5722/
+        /// <summary>
+        /// https://www.fenet.jp/dotnet/column/language/5722/
+        /// </summary>
+        /// <returns></returns>
         private List<Dictionary<string, string>> Get_Containers()
         {
             string ContainerNames = ConsoleCommandRunner.GetCommandResult("\"docker ps -a --format {{.Names}}\"");
@@ -74,6 +86,11 @@ namespace discord_template
             return additem;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         private Dictionary<string, string> ReadJsonFiles()
         {
             if(m_JsonList == null || m_JsonList.Length <= 0) { throw new Exception($"{nameof(m_JsonList)} is null or Empty."); }
@@ -87,6 +104,14 @@ namespace discord_template
             return commandvalue;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="containers"></param>
+        /// <param name="JsonContent"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
         private string PushContainerList(List<Dictionary<string,string>> containers, string JsonContent)
         {
             if(containers == null) { throw new ArgumentNullException(nameof(containers)); }
