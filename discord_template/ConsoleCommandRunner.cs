@@ -32,11 +32,11 @@ namespace docker_on_discord
 
             if (output != "")
             {
-                result += output + "\n\n";
+                result += output;
             }
             if (error != "")
             {
-                result += error + "\n\n";
+                result += error;
             }
 
             return result;

@@ -3,14 +3,13 @@ using Discord.Commands;
 using Discord.WebSocket;
 using docker_on_discord;
 using System.Configuration;
-using static System.Net.Mime.MediaTypeNames;
-using System.IO;
+using System.Reflection.Emit;
+using System.Text;
 
 namespace discord_template
 {
     class Program
     {
-        static Ids? ids = null;
         public static AppSettingsReader reader = new AppSettingsReader();
 
         private DiscordSocketClient? _client;
@@ -18,13 +17,7 @@ namespace discord_template
 
         public static void Main(string[] args)
         {
-            CommandBuilder commandbuilder = new CommandBuilder("docker.json");
-            commandbuilder.CommandPush();
-
-            ids = new Ids(reader);
-
-            CommandSender commandSender = new CommandSender(Directory.GetCurrentDirectory() + "/commands", ids, reader.GetValue("discordapi_version", typeof(string)).ToString()!);
-            commandSender.RequestSender();
+            CommandSender.RegisterGuildCommands();
 
             Thread.Sleep(1000);
 
@@ -43,6 +36,7 @@ namespace discord_template
 
             _client.Ready += Client_Ready;
             _client.SlashCommandExecuted += SlashCommandHandler;
+            _client.SelectMenuExecuted += SelectMenuHandler;
 
             await _client.LoginAsync(TokenType.Bot, reader.GetValue("token", typeof(string)).ToString());
             await _client.StartAsync();
@@ -57,7 +51,7 @@ namespace discord_template
             {
                 Console.WriteLine($"[Command/{message.Severity}] {cmdException.Command.Aliases.First()}" + $" failed to execute in {cmdException.Context.Channel}.");
                 Console.WriteLine(cmdException);
-            } 
+            }
             else { Console.WriteLine($"[General/{message.Severity}] {message}"); }
 
             return Task.CompletedTask;
@@ -69,61 +63,136 @@ namespace discord_template
         }
         private async Task SlashCommandHandler(SocketSlashCommand command)
         {
-            await command.RespondAsync("PROCESSING...");
-
-            string result = string.Empty;
-            if (command.CommandName == "docker")
+            _ = Task.Run(async () =>
             {
-                result = Command_Docker.DockerCtrl(command);
-                await command.ModifyOriginalResponseAsync(m => { m.Content = result; });
-                return;
-            }
-
-            if (command.CommandName == "containers")
-            {
-                result = Command_Containers.ListUp(command);
-
-                if (result.Length > 2000)
+                try
                 {
-                    Optional<IEnumerable<FileAttachment>> optional = new();
-                    using (Stream stream = new MemoryStream()) 
+                    await command.RespondAsync("PROCESSING...");
+
+                    string result = string.Empty;
+                    if (command.CommandName == "docker" && Settings.Shared.m_AdminIds.Contains(command.User.Id.ToString()))
                     {
-                        StreamWriter sw = new StreamWriter(stream);
-                        sw.Write(result);
-                        stream.Position = 0;
+                        string firstval = command.Data.Options.First().Value.ToString()!;
 
-                        //ファイル添付に必用な処理
-                        FileAttachment fa = new FileAttachment(stream, DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".txt");
-                        List<FileAttachment> flis = new List<FileAttachment>();
-                        flis.Add(fa);
-                        optional = new Optional<IEnumerable<FileAttachment>>(flis);
+                        Console.WriteLine(firstval);
 
-                        result = "文字数上限に達しました。sshから直接確認してください。";
+                        SelectMenuBuilder menuBuilder = await SelectMenuEditor.CreateContainerMenu(firstval, 0);
+                        ComponentBuilder builder = new ComponentBuilder().WithSelectMenu(menuBuilder);
+
+                        //await command.RespondAsync("以下の選択肢からコンテナを選択してください", components: builder.Build(), ephemeral: true);
+                        await command.ModifyOriginalResponseAsync(m =>
+                        {
+                            m.Content = "以下の選択肢からコンテナを選択してください";
+                            m.Components = builder.Build();
+                        });
+                        return;
+                    }
+
+                    if (command.CommandName == "containers")
+                    {
+                        result = Command_Containers.ListUp();
+                        string[] resultline = result.Split('\n');
+                        string linedresult = string.Empty;
+                        foreach (string line in resultline)
+                        {
+                            linedresult += $"{line}\n";
+                        }
+                        result = linedresult.TrimEnd('\r', '\n');
+
+                        if (result.Length > 2000)
+                        {
+                            Optional<IEnumerable<FileAttachment>> optional = new();
+                            using (Stream stream = new MemoryStream(Encoding.UTF8.GetBytes(result)))
+                            {
+                                //ファイル添付に必用な処理
+                                FileAttachment fa = new FileAttachment(stream, DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".txt");
+                                List<FileAttachment> flis = new List<FileAttachment>();
+                                flis.Add(fa);
+                                optional = new Optional<IEnumerable<FileAttachment>>(flis);
+
+                                result = $"文字数上限に達しました。sshから直接確認してください。\n文字数:[{result.Length}]";
+
+                                await command.ModifyOriginalResponseAsync(m =>
+                                {
+                                    m.Content = result;
+                                    m.Attachments = optional;
+                                });
+                            }
+                            return;
+                        }
 
                         await command.ModifyOriginalResponseAsync(m =>
                         {
-                            m.Content = result;
-                            m.Attachments = optional;
+                            m.Content = $"```\n{result}\n```";
                         });
+                        return;
                     }
-                    return;
+
+                    if (command.CommandName == "reload")
+                    {
+                        result = Command_Reload.ContainersReload();
+                        await command.ModifyOriginalResponseAsync(m => { m.Content = result; });
+                        return;
+                    }
+
+                    await command.ModifyOriginalResponseAsync(m => { m.Content = command.CommandName + " is not fonund."; });
                 }
-
-                await command.ModifyOriginalResponseAsync(m =>
+                catch(Exception ex)
                 {
-                    m.Content = $"```\n{result}\n```";
-                });
-                return;
-            }
+                    Console.WriteLine(ex.ToString());
+                    if (command.HasResponded)
+                    {
+                        await command.ModifyOriginalResponseAsync(m => { m.Content = ex.Message; });
+                        return;
+                    }
+                    await command.RespondAsync(ex.Message);
+                }
+            });
 
-            if (command.CommandName == "reload")
+            await Task.CompletedTask;
+        }
+
+        //
+        //セレクトメニューのイベント処理
+        private static async Task SelectMenuHandler(SocketMessageComponent arg)
+        {
+            _ = Task.Run(async () =>
             {
-                result = Command_Reload.ContainersReload(command, reader);
-                await command.ModifyOriginalResponseAsync(m => { m.Content = result; });
-                return;
-            }
+                await arg.DeferAsync(ephemeral: true);
+                try
+                {
+                    string funcName = arg.Data.CustomId;
+                    string[] selecteditem = arg.Data.Values.First().Split('@');
 
-            await command.ModifyOriginalResponseAsync(m => { m.Content = command.CommandName + " is not fonund."; });
+                    if (selecteditem[0] == "page")
+                    {
+                        SelectMenuBuilder menuBuilder = await SelectMenuEditor.CreateContainerMenu(funcName, int.Parse(selecteditem[1]));
+                        ComponentBuilder builder = new ComponentBuilder().WithSelectMenu(menuBuilder);
+
+                        await arg.ModifyOriginalResponseAsync(m =>
+                        {
+                            m.Content = "以下の選択肢からコンテナを選択してください";
+                            m.Components = builder.Build();
+                        });
+                        return;
+                    }
+
+                    string result = Command_Docker.DockerCtrl(funcName, selecteditem[1]);
+                    await arg.ModifyOriginalResponseAsync(m => { m.Content = result; });
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                    if (arg.HasResponded)
+                    {
+                        await arg.ModifyOriginalResponseAsync(m => { m.Content = ex.Message; });
+                        return;
+                    }
+                    await arg.RespondAsync(ex.Message);
+                }
+            });
+
+            await Task.CompletedTask;
         }
     }
 }

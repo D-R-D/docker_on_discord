@@ -12,18 +12,14 @@ namespace docker_on_discord
 {
     internal class Command_Reload
     {
-        public static string ContainersReload(SocketSlashCommand command, AppSettingsReader reader)
+        public static string ContainersReload()
         {
             string result = "warn: result write";
             try
             {
-                CommandBuilder commandbuilder = new CommandBuilder("docker.json");
-                commandbuilder.CommandPush();
-
-                Ids ids = new Ids(reader);
-
-                CommandSender commandSender = new CommandSender(Directory.GetCurrentDirectory() + "/commands", ids);
-                commandSender.RequestSender();
+                string ContainerNames = ConsoleCommandRunner.GetCommandResult("\"docker ps -a --format {{.Names}}\"");
+                string[] ContainerArray = ContainerNames.Split('\n');
+                Settings.Shared.m_ContainerList = new List<string>(ContainerArray);
 
                 result = "Reload Finish.";
             }

@@ -1,40 +1,32 @@
 ﻿using Discord.WebSocket;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace docker_on_discord
 {
     internal class Command_Docker
     {
-        public static string DockerCtrl(SocketSlashCommand command)
+        public static string DockerCtrl(string funcName, string containerName)
         {
             string result = "warn: result write";
 
             try
             {
-                string firstval = command.Data.Options.First().Value.ToString()!;
-                string lastval = command.Data.Options.Last().Value.ToString()!;
+                Console.WriteLine($"docker ctrl: F[{funcName}]/L[{containerName}]");
 
-                Console.WriteLine($"docker ctrl: F[{firstval}]/L[{lastval}]");
-
-                if (firstval == "start")
+                if (funcName == "start")
                 {
-                    result = ConsoleCommandRunner.GetCommandResult($"\"docker start {lastval}\"");
+                    result = ConsoleCommandRunner.GetCommandResult($"\"docker start {containerName}\"");
                     return result;
                 }
 
-                if (firstval == "stop")
+                if (funcName == "stop")
                 {
-                    result = ConsoleCommandRunner.GetCommandResult($"\"docker stop {lastval}\"");
+                    result = ConsoleCommandRunner.GetCommandResult($"\"docker stop {containerName}\"");
                     return result;
                 }
 
-                if (firstval == "restart")
+                if (funcName == "restart")
                 {
-                    result = ConsoleCommandRunner.GetCommandResult($"\"docker restart {lastval}\"");
+                    result = ConsoleCommandRunner.GetCommandResult($"\"docker restart {containerName}\"");
                     return result;
                 }
             }

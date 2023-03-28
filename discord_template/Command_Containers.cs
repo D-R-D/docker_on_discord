@@ -10,7 +10,7 @@ namespace docker_on_discord
 {
     internal class Command_Containers
     {
-        public static string ListUp(SocketSlashCommand command) 
+        public static string ListUp() 
         {
             string result = "warn: result write";
             Console.WriteLine($"container listup");
