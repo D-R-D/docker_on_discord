@@ -1,0 +1,26 @@
+{
+  "name": "docker",
+  "description": "docker start , stop and restart ",
+  "options": [
+    {
+      "name": "control",
+      "description": "choice control command",
+      "type": 3,
+      "required": true,
+      "choices": [
+        {
+          "name": "start",
+          "value": "start"
+        },
+        {
+          "name": "stop",
+          "value": "stop"
+        },
+        {
+          "name": "restart",
+          "value": "restart"
+        }
+      ]
+    }
+  ]
+}
