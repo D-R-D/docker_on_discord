@@ -1,7 +1,6 @@
-﻿using docker_on_discord;
-using System.Text;
+﻿using System.Text;
 
-namespace discord_template
+namespace docker_on_discord
 {
     internal class CommandSender
     {

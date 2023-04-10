@@ -1,14 +1,4 @@
-﻿using Discord.WebSocket;
-using discord_template;
-using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
-using System.Reflection.PortableExecutable;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace docker_on_discord
+﻿namespace docker_on_discord
 {
     internal class Command_Reload
     {

@@ -1,12 +1,10 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using docker_on_discord;
 using System.Configuration;
-using System.Reflection.Emit;
 using System.Text;
 
-namespace discord_template
+namespace docker_on_discord
 {
     class Program
     {
@@ -18,8 +16,6 @@ namespace discord_template
         public static void Main(string[] args)
         {
             CommandSender.RegisterGuildCommands();
-
-            Thread.Sleep(1000);
 
             _ = new Program().MainAsync();
 
@@ -52,7 +48,10 @@ namespace discord_template
                 Console.WriteLine($"[Command/{message.Severity}] {cmdException.Command.Aliases.First()}" + $" failed to execute in {cmdException.Context.Channel}.");
                 Console.WriteLine(cmdException);
             }
-            else { Console.WriteLine($"[General/{message.Severity}] {message}"); }
+            else 
+            {
+                Console.WriteLine($"[General/{message.Severity}] {message}");
+            }
 
             return Task.CompletedTask;
         }
@@ -79,7 +78,6 @@ namespace discord_template
                         SelectMenuBuilder menuBuilder = await SelectMenuEditor.CreateContainerMenu(firstval, 0);
                         ComponentBuilder builder = new ComponentBuilder().WithSelectMenu(menuBuilder);
 
-                        //await command.RespondAsync("以下の選択肢からコンテナを選択してください", components: builder.Build(), ephemeral: true);
                         await command.ModifyOriginalResponseAsync(m =>
                         {
                             m.Content = "以下の選択肢からコンテナを選択してください";
@@ -174,6 +172,7 @@ namespace discord_template
                             m.Content = "以下の選択肢からコンテナを選択してください";
                             m.Components = builder.Build();
                         });
+
                         return;
                     }
 

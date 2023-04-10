@@ -1,6 +1,4 @@
-﻿using docker_on_discord;
-
-namespace discord_template
+﻿namespace docker_on_discord
 {
     public static class Tools
     {

@@ -1,6 +1,4 @@
-﻿using Discord.WebSocket;
-
-namespace docker_on_discord
+﻿namespace docker_on_discord
 {
     internal class Command_Docker
     {

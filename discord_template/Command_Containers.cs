@@ -1,12 +1,4 @@
-﻿using Discord.Rest;
-using Discord.WebSocket;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace docker_on_discord
+﻿namespace docker_on_discord
 {
     internal class Command_Containers
     {
